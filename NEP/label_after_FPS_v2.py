@@ -4,7 +4,7 @@ from dpdispatcher import Machine, Resources, Task, Submission
 import datetime
 from ase.io import read, write
 from ase.calculators.vasp import Vasp
-os.environ['VASP_PP_PATH'] = "/home/yuqinghan/Software/VASP/POTCAR/ASE_POTCAR"
+os.environ['VASP_PP_PATH'] = "$HOME/Software/VASP/POTCAR/ASE_POTCAR"
 
 
 def generat_input_file(list_of_All_Structures, submit_dir='./submit/'):
@@ -40,10 +40,10 @@ def generate_tasks_list(list_of_All_Structures, submit_dir='submit/'):
 
 
 
-atoms_list_1 = read('/home/yuqinghan/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_12_Fe2N7HCl.xyz', index=':', format='extxyz')
-atoms_list_2 = read('/home/yuqinghan/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_13_Fe2N6NaOH.xyz', index=':', format='extxyz')
-atoms_list_3 = read('/home/yuqinghan/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_15_Fe2N7NaOH.xyz', index=':', format='extxyz')
-atoms_list_4 = read('/home/yuqinghan/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_19_Fe2N6HCl.xyz', index=':', format='extxyz')
+atoms_list_1 = read('$HOME/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_12_Fe2N7HCl.xyz', index=':', format='extxyz')
+atoms_list_2 = read('$HOME/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_13_Fe2N6NaOH.xyz', index=':', format='extxyz')
+atoms_list_3 = read('$HOME/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_15_Fe2N7NaOH.xyz', index=':', format='extxyz')
+atoms_list_4 = read('$HOME/Project/DAC/data/activate-learning/iter03/selection/select_structures_by_FPS_19_Fe2N6HCl.xyz', index=':', format='extxyz')
 list_of_All_Structures = []
 for i in range(1, 5):    # range(1,5) = int([1,5))
     list_of_All_Structures += eval(f'atoms_list_{i}')  # 使用eval动态生成变量名
@@ -53,16 +53,16 @@ task_list = generate_tasks_list(list_of_All_Structures, 'label-mix/')
 # load machine and resources
 machine = Machine(batch_type="PBS", context_type="SSHContext",
                   remote_profile = {
-					"hostname": "42.244.25.39",
+					"hostname": "xx.xxx.xx.xx",
                     "port": 8019,
-					"username": "yuqinghan",
-					"key_filename": "/home/yuqinghan/.ssh/CPU_75_mu06",
+					"username": "username",
+					"key_filename": "$HOME/.ssh/publish_key_file",
 					"timeout": 60},
-                  local_root="/home/yuqinghan/Project/DAC/data/activate-learning/iter03/", 
-                  remote_root='/home/yuqinghan/Project/Fe-C-N4/DPGEN-run')
-resources = Resources(number_node=1, cpu_per_node=24, gpu_per_node=0, queue_name='batch', group_size=5, para_deg=1, custom_flags=["#PBS -N fp-dump-selected"], source_list=['/home/yuqinghan/Project/Fe-C-N4/label.env'])
+                  local_root="$HOME/Project/DAC/data/activate-learning/iter03/", 
+                  remote_root='$HOME/Project/Fe-C-N4/DPGEN-run')
+resources = Resources(number_node=1, cpu_per_node=24, gpu_per_node=0, queue_name='batch', group_size=5, para_deg=1, custom_flags=["#PBS -N fp-dump-selected"], source_list=['$HOME/Project/Fe-C-N4/label.env'])
 # submit jobs
-submission = Submission(work_base='/home/yuqinghan/Project/DAC/data/activate-learning/iter03/', machine=machine, resources=resources, task_list=task_list)
+submission = Submission(work_base='$HOME/Project/DAC/data/activate-learning/iter03/', machine=machine, resources=resources, task_list=task_list)
 submission.run_submission()
 
 print(f"All mission has been done at {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
