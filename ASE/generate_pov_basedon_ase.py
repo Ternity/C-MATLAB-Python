@@ -1,10 +1,11 @@
 from ase.io import read
 import numpy as np
-from ase.io.pov import write_pov, get_bondpairs
+from ase.io.pov import write_pov # , get_bondpairs
 from pathlib import Path
-import os
 
-atoms = read('./POSCAR')
+atoms = read('./POSCAR-1', format='vasp')
+atoms.wrap()
+# atoms = atoms.repeat([3, 3, 1])
 pov_file_name = 'POSCAR.pov'    # suffix must be .pov
 ini_file_name = Path(pov_file_name).with_suffix('.ini')
 png_file_name = 'POSCAR.png'
@@ -12,8 +13,7 @@ self_define_colors = False
 atoms_show_bonds_model = 3    # 1, all atoms show bonds; 2, no atom show bonds; 3, only selected atoms show bonds
 bondlinewidth = 0.1
 
-
-def self_define_get_bondpairs(atoms, indices_of_interest, radius=1.1):
+def _self_define_get_bondpairs(atoms, indices_of_interest:list, radius=1.2):
     from ase.data import covalent_radii
     from ase.neighborlist import NeighborList
     cutoffs = radius * covalent_radii[atoms.numbers]
@@ -22,14 +22,14 @@ def self_define_get_bondpairs(atoms, indices_of_interest, radius=1.1):
     bondpairs = []
     for a in indices_of_interest:
         indices, offsets = nl.get_neighbors(a)
-        bondpairs.extend([(a, a2, offset)                           # 除了a要在列表里，a2也要在列表里
+        bondpairs.extend([(a, a2, offset)                           # 除了a要在列表里, a2也要在列表里
                           for a2, offset in zip(indices, offsets) if a2 in indices_of_interest])
     return bondpairs
 
-bond_atom_index = [i for i, atom in enumerate(atoms) if atom.symbol in ['H','O'] if i not in [306, 388, 389, 390]]
-bondatoms_list =  self_define_get_bondpairs(atoms, bond_atom_index, radius=0.9) # []
+bond_atom_index = [i for i, atom in enumerate(atoms) if atom.symbol in ['H','O'] if i not in [305, 386,387]]
+bondatoms_list =  _self_define_get_bondpairs(atoms, bond_atom_index, radius=0.50) # []
 
-plotting_var_settings = {'maxwidth': 50000000000000}
+plotting_var_settings = {'maxwidth': 50000000000000, "show_unit_cell": 0, "rotation": '-0z, -0x, 0y'}
 if atoms_show_bonds_model == 1:
     radii_scale = 0.57          # float, radii = covalent_radii*radii_scale
 elif atoms_show_bonds_model == 2:
@@ -60,8 +60,8 @@ h_indices = [i for i, atom in enumerate(atoms) if atom.symbol == 'H']
 o_indices = [i for i, atom in enumerate(atoms) if atom.symbol == 'O']
 # 设置除了索引为 307, 388, 389, 390 之外的 H 和 O 原子的透明度
 for i in h_indices + o_indices:
-    if i not in [306, 388, 389, 390]:
-        transmittances[i] = 0.001
+    if i not in [305, 386,387]:
+        transmittances[i] = 0.01
 povray_settings["transmittances"] = transmittances  # 将 transmittances 赋值给 povray_settings
 
 
@@ -74,7 +74,7 @@ if self_define_colors:
 
 
 #=======================Method 1: Use pre setting=======================
-write_pov(pov_file_name, atoms, povray_settings=povray_settings, **plotting_var_settings)
+pov_ini_put = write_pov(pov_file_name, atoms, povray_settings=povray_settings, **plotting_var_settings)
 # For function write_pov, param povray_settings is param for Class POVRAY.
 '''povray_settings include:
 cell, cell_vertices, positions, diameters, colors,
@@ -104,7 +104,5 @@ for function write_pov, atoms and scale shouldn't be given, colors are not sugge
 
 #=======================Render execute=======================
 # D:\Draw\POV-Ray\core\bin\pvengine64.exe +W2556 +H2000 -Iexample.pov -OC2H161Cu144IO83.png +P +X +A0.1 +FN +C +UA
-# os.system(f'D:\\Draw\\POV-Ray\\core\\bin\\pvengine64.exe -I{pov_file_name} -O{png_file_name} +P +X +A0.1 +FN +C +UA')
 
-os.system(f'D:\\Draw\\POV-Ray\\core\\bin\\pvengine64.exe  {ini_file_name}')
-os.remove(pov_file_name); os.remove(ini_file_name)# ; os.remove(png_file_name)
+png_path = pov_ini_put.render(povray_executable='D:\\Draw\\POV-Ray\\core\\bin\\pvengine64.exe', clean_up=True)
